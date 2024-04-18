@@ -45,12 +45,14 @@ class RandomAI(Player):
 
 
 class HeuristicAI(Player):
-    """
-    Heuristic AI that evaluates moves based on a simple scoring system.
-    """
+    def __init__(self, board, workers, worker_positions, opponent_workers, scoring_system):
+        super().__init__(board, workers, worker_positions)
+        self.opponent_workers = opponent_workers
+        self.scoring_system = scoring_system
+
     def select_move(self):
         best_score = -float('inf')
-        best_move = None
+        best_moves = []
         for worker in self.workers:
             x, y = self.worker_positions[worker]
             for move_dir in self.board.directions:
@@ -59,15 +61,46 @@ class HeuristicAI(Player):
                     for build_dir in self.board.directions:
                         build_x, build_y = new_x + self.board.directions[build_dir][0], new_y + self.board.directions[build_dir][1]
                         if self.board.can_build(new_x, new_y, build_dir, x, y):
-                            score = self.evaluate_move(new_x, new_y, build_dir)
+                            _, center_score, distance_score = self.scoring_system.calculate_scores([worker], self.opponent_workers)
+                            height_score = self.board.grid[new_x][new_y]['level']
+                            score = 3 * height_score + 2 * center_score + distance_score
+                            if height_score == 3:
+                                score += 100  # Winning priority
                             if score > best_score:
                                 best_score = score
-                                best_move = (worker, move_dir, build_dir)
-        return best_move
+                                best_moves = [(worker, move_dir, build_dir)]
+                            elif score == best_score:
+                                best_moves.append((worker, move_dir, build_dir))
+        return random.choice(best_moves) if best_moves else None
 
+# class HeuristicAI(Player):
+#     def __init__(self, board, workers, worker_positions, opponent_workers, scoring_system):
+#         super().__init__(board, workers, worker_positions)
+#         self.opponent_workers = opponent_workers
+#         self.scoring_system = scoring_system
 
-    def evaluate_move(self, x, y, build_dir):
-        # A simple scoring example: higher levels and central positions score higher
-        level_score = self.board.grid[x][y]['level']
-        center_score = 2 if (x == 2 and y == 2) else 1 if (1 <= x <= 3 and 1 <= y <= 3) else 0
-        return level_score + center_score
+#     def select_move(self):
+#         best_score = -float('inf')
+#         best_moves = []
+#         opponent_positions = {worker: self.worker_positions[worker] for worker in self.opponent_workers}
+#         for worker in self.workers:
+#             x, y = self.worker_positions[worker]
+#             for move_dir in self.board.directions:
+#                 new_x, new_y = x + self.board.directions[move_dir][0], y + self.board.directions[move_dir][1]
+#                 if self.board.can_move(x, y, move_dir) and self.board.is_within_bounds(new_x, new_y):
+#                     for build_dir in self.board.directions:
+#                         build_x, build_y = new_x + self.board.directions[build_dir][0], new_y + self.board.directions[build_dir][1]
+#                         if self.board.can_build(new_x, new_y, build_dir, x, y):
+#                             simulated_positions = {**self.worker_positions, worker: (new_x, new_y)}
+#                             height_score = self.board.grid[new_x][new_y]['level']
+#                             center_score, distance_score = self.scoring_system.calculate_scores(simulated_positions, opponent_positions)
+#                             score = 3 * height_score + 2 * center_score + distance_score
+#                             if height_score == 3:  # Winning priority
+#                                 score += 100
+#                             if score > best_score:
+#                                 best_score = score
+#                                 best_moves = [(worker, move_dir, build_dir)]
+#                             elif score == best_score:
+#                                 best_moves.append((worker, move_dir, build_dir))
+#         return random.choice(best_moves) if best_moves else None
+

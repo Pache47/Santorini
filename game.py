@@ -1,5 +1,6 @@
 from board import Board
 from player import RandomAI, HeuristicAI
+from score import ScoringSystem
 
 class Game:
     def __init__(self, player1_type='human', player2_type='human', undo_redo_enabled=False, score_display=False):
@@ -10,35 +11,49 @@ class Game:
         self.players = {'white': ['A', 'B'], 'blue': ['Y', 'Z']}
         self.worker_positions = {'A': (3, 1), 'B': (1, 3), 'Y': (1, 1), 'Z': (3, 3)}
         self.player_types = {'white': player1_type, 'blue': player2_type}
+        self.score_display = score_display
+        self.scoring_system = ScoringSystem(self.board, self.worker_positions)  # Correct initialization
+        self.player_ai = {'white': None, 'blue': None}  # Initialize player_ai dictionary
         self.initialize_players()
 
     def initialize_players(self):
-        # Initialize AI based on the type of player
-        self.player_ai = {
-            'blue': RandomAI(self.board, self.players['blue'], self.worker_positions) if self.player_types['blue'] == 'random'
-            else HeuristicAI(self.board, self.players['blue'], self.worker_positions) if self.player_types['blue'] == 'heuristic'
-            else None,
-            'white': RandomAI(self.board, self.players['white'], self.worker_positions) if self.player_types['white'] == 'random'
-            else HeuristicAI(self.board, self.players['white'], self.worker_positions) if self.player_types['white'] == 'heuristic'
-            else None
+        opponent_workers = {
+            'white': self.players['blue'],  # White player's opponents are blue workers
+            'blue': self.players['white']   # Blue player's opponents are white workers
         }
 
+        for color in ['white', 'blue']:
+            if self.player_types[color] == 'heuristic':
+                self.player_ai[color] = HeuristicAI(self.board, self.players[color], self.worker_positions, opponent_workers[color], self.scoring_system)
+            elif self.player_types[color] == 'random':
+                self.player_ai[color] = RandomAI(self.board, self.players[color], self.worker_positions)
+            # Additional player types could be added here if needed
+        
     def switch_player(self):
         self.current_player = 'blue' if self.current_player == 'white' else 'white'
 
     def play_turn(self):
-        self.board.display()
+        self.board.display()  # Always display the board at the beginning of the turn
         workers = ''.join(self.players[self.current_player])
-        print(f"Turn: {self.turn_count}, {self.current_player} ({workers})")
+        if self.score_display:
+            scores = self.scoring_system.calculate_scores(
+                self.players[self.current_player],
+                self.players['blue' if self.current_player == 'white' else 'white']
+            )
+            print(f"Turn: {self.turn_count}, {self.current_player} ({workers}), ({scores[0]}, {scores[1]}, {scores[2]})")
+        else:
+            print(f"Turn: {self.turn_count}, {self.current_player} ({workers})")
 
         if self.player_types[self.current_player] == 'human':
-            worker, move_direction, build_direction = self.handle_human_turn()
-            print(f"{worker},{move_direction},{build_direction}")
+            self.handle_human_turn()
+
+            # worker, move_direction, build_direction = self.handle_human_turn()
+            # print(f"{worker},{move_direction},{build_direction}")  # Display the move right after making it
         else:
             self.ai_play_turn()
 
         if self.check_win_condition():
-            return
+            return  # If someone wins, the game ends after displaying the winning board state
 
         self.switch_player()
         self.turn_count += 1
@@ -52,7 +67,12 @@ class Game:
             if new_x is not None:
                 build_direction = self.get_build_direction(new_x, new_y, x, y)
                 if build_direction:
-                    return worker, move_direction, build_direction
+                    if self.score_display:
+                        scores = self.scoring_system.calculate_scores(self.players[self.current_player], self.players['blue' if self.current_player == 'white' else 'white'])
+                        print(f"{worker},{move_direction},{build_direction} ({scores[0]}, {scores[1]}, {scores[2]})")
+                    else:
+                        print(f"{worker},{move_direction},{build_direction}")
+                    return
 
     def get_worker_input(self):
         while True:
@@ -74,8 +94,9 @@ class Game:
             self.board.move_worker(x, y, direction)
             self.worker_positions[worker] = (new_x, new_y)
             return new_x, new_y
-        print(f"Cannot move {direction}")
-        return None, None
+        else:
+            print(f"Cannot move {direction}")
+            return None, None
 
     def get_build_direction(self, new_x, new_y, old_x, old_y):
         while True:
@@ -89,16 +110,6 @@ class Game:
             else:
                 print("Not a valid direction")
 
-    # def ai_play_turn(self):
-    #     ai = self.player_ai[self.current_player]
-    #     if ai:
-    #         move = ai.select_move()
-    #         if move:
-    #             worker, move_direction, build_direction = move
-    #             x, y = self.worker_positions[worker]
-    #             self.execute_move(worker, move_direction, x, y)
-    #             print(f"{worker},{move_direction},{build_direction}")
-
     def ai_play_turn(self):
         ai = self.player_ai[self.current_player]
         if ai:
@@ -106,19 +117,45 @@ class Game:
             if move:
                 worker, move_direction, build_direction = move
                 x, y = self.worker_positions[worker]
-                # Execute the move if valid
-                if self.board.move_worker(x, y, move_direction):
-                    new_x, new_y = x + self.board.directions[move_direction][0], y + self.board.directions[move_direction][1]
-                    self.worker_positions[worker] = (new_x, new_y)
-                    # Execute the build if possible
+                new_x, new_y = self.execute_move(worker, move_direction, x, y)
+                if new_x is not None:
                     if self.board.build(new_x, new_y, build_direction, x, y):
-                        print(f"{worker},{move_direction},{build_direction}")
+                        if self.score_display:
+                            scores = self.scoring_system.calculate_scores(self.players[self.current_player], self.players['blue' if self.current_player == 'white' else 'white'])
+                            print(f"{worker},{move_direction},{build_direction} ({scores[0]}, {scores[1]}, {scores[2]})")
+                        else:
+                            print(f"{worker},{move_direction},{build_direction}")
 
+    # def check_win_condition(self):
+    #     # Check if any worker is on level 3
+    #     for worker, (x, y) in self.worker_positions.items():
+    #         if self.board.grid[x][y]['level'] == 3:
+    #             self.game_over = True
+    #             self.board.display()
+    #             # print(f"Turn: {self.turn_count+1})")
+    #             print(f"{self.current_player} has won")
+    #             return True
+    #     return False
+    
     def check_win_condition(self):
         # Check if any worker is on level 3
         for worker, (x, y) in self.worker_positions.items():
             if self.board.grid[x][y]['level'] == 3:
                 self.game_over = True
+                self.board.display()  # Display the board state at the time of winning
+                # Display the upcoming turn information
+                next_player = 'blue' if self.current_player == 'white' else 'white'
+                workers = ''.join(self.players[next_player])
+                turn_info = f"Turn: {self.turn_count + 1}, {next_player} ({workers})"
+                
+                # Calculate and display the score if scoring is enabled
+                if self.score_display:
+                    scores = self.scoring_system.calculate_scores(self.players[self.current_player],
+                                                                self.players['blue' if self.current_player == 'white' else 'white'])
+                    print(f"{turn_info}, ({scores[0]}, {scores[1]}, {scores[2]})")
+                else:
+                    print(turn_info)
+                
                 print(f"{self.current_player} has won")
                 return True
         return False
