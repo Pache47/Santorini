@@ -19,23 +19,31 @@ class GameManager:
         # Save the new state and adjust the current index
         self.history.append(copy.deepcopy(game_state))
         self.current_index += 1
+        # print("Saved state, current history length:", len(self.history), "current index:", self.current_index)
+
 
     def undo(self):
         """
         Reverts to the previous game state if possible.
         """
+        # print(f"Attempting undo from index {self.current_index}, history length {len(self.history)}")
         if self.current_index > 0:
             self.current_index -= 1
+            # print("Undid to index:", self.current_index)
             return copy.deepcopy(self.history[self.current_index])
+        # print("Undo not possible")
         return None
 
     def redo(self):
         """
         Advances to the next game state if possible.
         """
+        # print(f"Attempting redo from index {self.current_index}, history length {len(self.history)}")
         if self.current_index < len(self.history) - 1:
             self.current_index += 1
+            # print("Redid to index:", self.current_index)
             return copy.deepcopy(self.history[self.current_index])
+        # print("Redo not possible")
         return None
 
     def can_undo(self):
