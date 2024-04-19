@@ -82,7 +82,6 @@ class HeuristicAI(Player):
                                 best_moves = [(worker, move_dir, build_dir)]
                             elif score == best_score:
                                 best_moves.append((worker, move_dir, build_dir))
-        print((best_moves),score)
         return random.choice(best_moves) if best_moves else None
 
 # class HeuristicAI(Player):
