@@ -61,7 +61,6 @@ def main():
 
     while not game.game_over:
         count +=1
-        print("Count ,",count, "Turn :",game.turn_count)
         # Check win condition at the very start of each turn
          # If the game has ended, skip further processing
 
@@ -73,15 +72,15 @@ def main():
             while True:
                 current_index = game.game_manager.current_index
                 moves = game.game_manager.moves
-                if len(moves) < 1:
-                    break
-                prompt = ""
-                if(current_index > -1 and current_index < len(moves)-1):
-                    prompt = "undo, redo, or next\n"
-                elif(current_index > -1):
-                    prompt = "undo, or next\n"
-                else:
-                    prompt = "redo, or next\n"
+                # if len(moves) < 1:
+                #     break
+                prompt = "undo, redo, or next\n"
+                # if(current_index > -1 and current_index < len(moves)-1):
+                #     prompt = "undo, redo, or next\n"
+                # elif(current_index > -1):
+                #     prompt = "undo, or next\n"
+                # else:
+                #     prompt = "redo, or next\n"
                 user_input = input(prompt).lower() 
                 if user_input == 'redo':
                     if current_index < len(moves)-1:
@@ -99,7 +98,10 @@ def main():
                         game.show_turn_info()
                         continue  
                     else:
-                        print("No more moves to redo")
+                        game.board.display()  
+                        game.show_turn_info()
+                        continue
+                        # print("No more moves to redo")
                 elif user_input == 'undo':
                     if current_index > -1:
                         last_move = moves[current_index]
@@ -116,7 +118,10 @@ def main():
                         game.show_turn_info()
                         continue  # Successfully undid, show updated state
                     else:
-                        print("No more moves to undo")
+                        game.board.display()  # Display board state at the start of each full turn
+                        game.show_turn_info()
+                        continue
+                        # print("No more moves to undo")
                 elif user_input == 'next':
                     break
                 else:
