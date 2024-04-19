@@ -2,35 +2,38 @@ import copy
 
 class GameManager:
     """
-    Manages the game state history to enable undo and redo functionalities.
+    Manages the game state moves to enable undo and redo functionalities.
     """
     def __init__(self):
-        self.history = []  # List to store game states
-        self.current_index = -1  # Tracks the current position in history
+        self.moves=[]
+        self.current_index = -1  # Tracks the current position in moves
 
-    def save_state(self, game_state):
+    def save_state(self,move):
         """
-        Saves the current state of the game, truncating any forward history if making a new move after an undo.
+        Saves the current state of the game, truncating any forward moves if making a new move after an undo.
         """
-        # Truncate the history if the current state isn't the last one
-        if self.current_index < len(self.history) - 1:
-            self.history = self.history[:self.current_index + 1]
+
+        # Truncate the moves if the current state isn't the last one
+        if self.current_index < len(self.moves) - 1:
+            self.moves = self.moves[:self.current_index + 1]
         
         # Save the new state and adjust the current index
-        self.history.append(copy.deepcopy(game_state))
-        self.current_index += 1
-        # print("Saved state, current history length:", len(self.history), "current index:", self.current_index)
+        if(move):
+            self.moves.append(move)
+            self.current_index += 1
+        print("Saved Moves",self.moves)
+        # print("Saved state, current moves length:", len(self.moves), "current index:", self.current_index)
 
 
     def undo(self):
         """
         Reverts to the previous game state if possible.
         """
-        # print(f"Attempting undo from index {self.current_index}, history length {len(self.history)}")
+        # print(f"Attempting undo from index {self.current_index}, moves length {len(self.moves)}")
         if self.current_index > 0:
             self.current_index -= 1
             # print("Undid to index:", self.current_index)
-            return copy.deepcopy(self.history[self.current_index])
+            return copy.deepcopy(self.moves[self.current_index])
         # print("Undo not possible")
         return None
 
@@ -38,11 +41,11 @@ class GameManager:
         """
         Advances to the next game state if possible.
         """
-        # print(f"Attempting redo from index {self.current_index}, history length {len(self.history)}")
-        if self.current_index < len(self.history) - 1:
+        # print(f"Attempting redo from index {self.current_index}, moves length {len(self.moves)}")
+        if self.current_index < len(self.moves) - 1:
             self.current_index += 1
             # print("Redid to index:", self.current_index)
-            return copy.deepcopy(self.history[self.current_index])
+            return copy.deepcopy(self.moves[self.current_index])
         # print("Redo not possible")
         return None
 
@@ -56,5 +59,5 @@ class GameManager:
         """
         Returns True if a redo operation is possible.
         """
-        return self.current_index < len(self.history) - 1
+        return self.current_index < len(self.moves) - 1
 

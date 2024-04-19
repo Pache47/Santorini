@@ -37,36 +37,34 @@ class Game:
     def switch_player(self):
         self.current_player = 'blue' if self.current_player == 'white' else 'white'
 
-    def play_turn(self):
-        self.board.display()  # Always display the board at the beginning of the turn
-        workers = ''.join(self.players[self.current_player])
-        
-        # if self.undo_redo_enabled:
-        #     self.game_manager.save_state(copy.deepcopy(self))  # Save the state at start of turn
+    # def play_turn(self):
+    #     self.board.display()  # Always display the board at the beginning of the turn
+    #     workers = ''.join(self.players[self.current_player])
+    #     # if self.undo_redo_enabled:
+    #     #     self.game_manager.save_state(copy.deepcopy(self))  # Save the state at start of turn
 
 
-        if self.score_display:
-            scores = self.scoring_system.calculate_scores(
-                self.players[self.current_player],
-                self.players['blue' if self.current_player == 'white' else 'white']
-            )
-            print(f"Turn: {self.turn_count}, {self.current_player} ({workers}), ({scores[0]}, {scores[1]}, {scores[2]})")
-        else:
-            print(f"Turn: {self.turn_count}, {self.current_player} ({workers})")
+    #     if self.score_display:
+    #         scores = self.scoring_system.calculate_scores(
+    #             self.players[self.current_player],
+    #             self.players['blue' if self.current_player == 'white' else 'white']
+    #         )
+    #         print(f"Turn: {self.turn_count}, {self.current_player} ({workers}), ({scores[0]}, {scores[1]}, {scores[2]})")
+    #     else:
+    #         print(f"Turn: {self.turn_count}, {self.current_player} ({workers})")
 
-        if self.player_types[self.current_player] == 'human':
-            self.handle_human_turn()
-        else:
-            self.ai_play_turn()
+    #     if self.player_types[self.current_player] == 'human':
+    #         self.handle_human_turn()
+    #     else:
+    #         self.ai_play_turn()
 
-        if self.check_win_condition():
-            return  # If someone wins, the game ends after displaying the winning board state
-        
-        if self.undo_redo_enabled:
-            self.game_manager.save_state(copy.deepcopy(self))  # Save the state at end of turn
+    #     if self.check_win_condition():
+    #         return  # If someone wins, the game ends after displaying the winning board state
+    #     print("Undo enabled , ",self.undo_redo_enabled, move)
+    #       # Save the state at end of turn
 
-        self.switch_player()
-        self.turn_count += 1
+    #     self.switch_player()
+    #     self.turn_count += 1
 
     def handle_human_turn(self):
         while True:
@@ -77,12 +75,13 @@ class Game:
             if new_x is not None:
                 build_direction = self.get_build_direction(new_x, new_y, x, y)
                 if build_direction:
+                    move = (worker,move_direction,build_direction)
                     if self.score_display:
                         scores = self.scoring_system.calculate_scores(self.players[self.current_player], self.players['blue' if self.current_player == 'white' else 'white'])
                         print(f"{worker},{move_direction},{build_direction} ({scores[0]}, {scores[1]}, {scores[2]})")
                     else:
                         print(f"{worker},{move_direction},{build_direction}")
-                    return
+                    return move
 
     def get_worker_input(self):
         while True:
@@ -101,10 +100,14 @@ class Game:
             else:
                 print("Not a valid direction")
 
-    def execute_move(self, worker, direction, x, y):
-        new_x, new_y = x + self.board.directions[direction][0], y + self.board.directions[direction][1]
-        if self.board.can_move(x, y, direction):
-            self.board.move_worker(x, y, direction)
+    def execute_move(self, worker, direction, x, y,reverse=False):
+        dx, dy = self.board.directions[direction]
+        if (reverse):
+            dx*=-1
+            dy*=-1
+        new_x, new_y = x + dx, y + dy
+        if reverse or self.board.can_move(x, y, direction):
+            self.board.move_worker(x, y, direction,reverse)
             self.worker_positions[worker] = (new_x, new_y)
             return new_x, new_y
         else:
@@ -131,6 +134,7 @@ class Game:
                 worker, move_direction, build_direction = move
                 x, y = self.worker_positions[worker]
                 new_x, new_y = self.execute_move(worker, move_direction, x, y)
+                print("AI move", move)
                 if new_x is not None:
                     if self.board.build(new_x, new_y, build_direction, x, y):
                         if self.score_display:
@@ -138,6 +142,8 @@ class Game:
                             print(f"{worker},{move_direction},{build_direction} ({scores[0]}, {scores[1]}, {scores[2]})")
                         else:
                             print(f"{worker},{move_direction},{build_direction}")
+
+                        return move
 
     # def check_win_condition(self):
     #     # Check if any worker is on level 3
@@ -164,7 +170,7 @@ class Game:
                 # Calculate and display the score if scoring is enabled
                 if self.score_display:
                     scores = self.scoring_system.calculate_scores(self.players[self.current_player],
-                                                                self.players['blue' if self.current_player == 'white' else 'white'])
+                    self.players['blue' if self.current_player == 'white' else 'white'])
                     print(f"{turn_info}, ({scores[0]}, {scores[1]}, {scores[2]})")
                 else:
                     print(turn_info)

@@ -26,8 +26,13 @@
 
 
 
+
+
+from board import Board
+
+
 class ScoringSystem:
-    def __init__(self, board, worker_positions):
+    def __init__(self, board:Board, worker_positions):
         self.board = board
         self.worker_positions = worker_positions
 
@@ -50,11 +55,14 @@ class ScoringSystem:
             x, y = self.worker_positions[worker]
             distances = [abs(x - opp_x) + abs(y - opp_y) for opp_worker in opponent_workers for opp_x, opp_y in [self.worker_positions[opp_worker]]]
             score += min(distances)
-        max_possible_distance = 8 * len(workers)  # Hypothetically the maximum distance on a 5x5 grid
-        normalized_score = max_possible_distance - score  # Lower distances should increase the score
+        normalized_score = 8 - score  # Lower distances should increase the score
         return normalized_score
 
 
+class AIScoreWeighing(ScoringSystem):
+    def __init__(self, board, worker_positions):
+        self.board = board
+        self.worker_positions = worker_positions
 # class ScoringSystem:
 #     def __init__(self, board, worker_positions):
 #         self.board = board

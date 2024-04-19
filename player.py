@@ -1,11 +1,15 @@
 import random
 
+from board import Board
+from score import ScoringSystem
+import copy
+
 class Player:
     """
     Base class for all player types.
     """
-    def __init__(self, board, workers, worker_positions):
-        self.board = board
+    def __init__(self, board:Board, workers, worker_positions):
+        self.board = board 
         self.workers = workers
         self.worker_positions = worker_positions
 
@@ -45,7 +49,7 @@ class RandomAI(Player):
 
 
 class HeuristicAI(Player):
-    def __init__(self, board, workers, worker_positions, opponent_workers, scoring_system):
+    def __init__(self, board, workers, worker_positions, opponent_workers, scoring_system:ScoringSystem):
         super().__init__(board, workers, worker_positions)
         self.opponent_workers = opponent_workers
         self.scoring_system = scoring_system
@@ -61,8 +65,14 @@ class HeuristicAI(Player):
                     for build_dir in self.board.directions:
                         build_x, build_y = new_x + self.board.directions[build_dir][0], new_y + self.board.directions[build_dir][1]
                         if self.board.can_build(new_x, new_y, build_dir, x, y):
-                            _, center_score, distance_score = self.scoring_system.calculate_scores([worker], self.opponent_workers)
-                            height_score = self.board.grid[new_x][new_y]['level']
+                            test_board = Board()
+                            test_board.grid = copy.deepcopy(self.board.grid)
+                            test_worker_pos = copy.deepcopy(self.worker_positions)
+                            test_board.grid[new_x][new_y]['worker'], test_board.grid[x][y]['worker'] = test_board.grid[x][y]['worker'], None
+                            test_worker_pos[worker] = (new_x, new_y)
+                            test_board.grid[build_x][build_y]['level'] += 1 
+                            ai_score_sys = ScoringSystem(test_board,test_worker_pos)
+                            height_score, center_score, distance_score =ai_score_sys.calculate_scores(self.workers, self.opponent_workers)
                             score = 3 * height_score + 2 * center_score + distance_score
                             if height_score == 3:
                                 score += 100  # Winning priority
@@ -71,6 +81,7 @@ class HeuristicAI(Player):
                                 best_moves = [(worker, move_dir, build_dir)]
                             elif score == best_score:
                                 best_moves.append((worker, move_dir, build_dir))
+        print((best_moves),score)
         return random.choice(best_moves) if best_moves else None
 
 # class HeuristicAI(Player):

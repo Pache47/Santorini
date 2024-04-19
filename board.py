@@ -37,14 +37,17 @@ class Board:
         target_cell = self.grid[new_x][new_y]
         return target_cell['worker'] is None and target_cell['level'] <= self.grid[from_x][from_y]['level'] + 1 and target_cell['level'] < 4
 
-    def move_worker(self, from_x, from_y, direction):
+    def move_worker(self, from_x, from_y, direction,reverse=False):
         # Execute a worker move if valid
-        if self.can_move(from_x, from_y, direction):
-            dx, dy = self.directions[direction]
-            new_x, new_y = from_x + dx, from_y + dy
-            self.grid[new_x][new_y]['worker'], self.grid[from_x][from_y]['worker'] = self.grid[from_x][from_y]['worker'], None
-            return True
-        return False
+        # if self.can_move(from_x, from_y, direction):
+        dx, dy = self.directions[direction]
+        if (reverse):
+            dx*=-1
+            dy*=-1
+        new_x, new_y = from_x + dx, from_y + dy
+        self.grid[new_x][new_y]['worker'], self.grid[from_x][from_y]['worker'] = self.grid[from_x][from_y]['worker'], None
+            # return True
+        # return False
 
     def can_build(self, x, y, direction, old_x, old_y):
         # Check if building is possible in a given direction from a new position
@@ -58,11 +61,14 @@ class Board:
             return False
         return target_cell['level'] < 4
 
-    def build(self, x, y, direction, old_x, old_y):
+    def build(self, x, y, direction, old_x=None, old_y=None,reverse=False):
         # Execute building if valid
-        if self.can_build(x, y, direction, old_x, old_y):
+        if reverse or self.can_build(x, y, direction, old_x, old_y):
             dx, dy = self.directions[direction]
             build_x, build_y = x + dx, y + dy
-            self.grid[build_x][build_y]['level'] += 1
+            if(reverse):
+                self.grid[build_x][build_y]['level'] -= 1 
+            else:
+                self.grid[build_x][build_y]['level'] += 1 
             return True
         return False
