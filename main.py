@@ -12,25 +12,51 @@ def parse_arguments():
     undo_redo_enabled = False
     score_display = False
 
+    player_types = [
+        "human",
+        "heuristic",
+        "random"
+    ]
+
+
     # Assign values based on command line arguments
     if len(sys.argv) > 1:
-        player1_type = sys.argv[1].lower()
+        if(sys.argv[1].lower() in player_types):
+            player1_type = sys.argv[1].lower()
+        else:
+            print("Invalid player type for white player")
+            exit()
     if len(sys.argv) > 2:
-        player2_type = sys.argv[2].lower()
+        if(sys.argv[2].lower() in player_types):
+            player2_type = sys.argv[2].lower()
+        else:
+            print("Invalid player type for blue player")
+            exit()
     if len(sys.argv) > 3:
-        undo_redo_enabled = sys.argv[3].lower() == 'on'
+        if(sys.argv[3].lower() == 'on' or sys.argv[3].lower() == 'off'):
+            undo_redo_enabled = sys.argv[3].lower() == 'on'
+        else:
+            print("Invalid value for enable undo/redo (on/off)")
+            exit()
     if len(sys.argv) > 4:
-        score_display = sys.argv[4].lower() == 'on'
+        if(sys.argv[3].lower() == 'on' or sys.argv[3].lower() == 'off'):
+            score_display = sys.argv[4].lower() == 'on'
+        else:
+            print("Invalid value for enable score display (on/off)")
+            exit()
 
     return player1_type, player2_type, undo_redo_enabled, score_display
 
 
 def main():
+    """
+    Main function to set up and start the game.
+    """
     player1_type, player2_type, undo_redo_enabled, score_display = parse_arguments()
     game = Game(player1_type, player2_type, undo_redo_enabled, score_display)
 
     if undo_redo_enabled:
-        game.game_manager.save_state(copy.deepcopy(game))  # Save initial state    
+        game.game_manager.save_state(copy.deepcopy(game))  # Save initial state
 
     while not game.game_over:
         # Check win condition at the very start of each turn
@@ -89,8 +115,8 @@ if __name__ == "__main__":
 
 #     while not game.game_over:
 #         # Display the board state and turn info at the start of each full turn only
-#         game.board.display()  
-#         game.show_turn_info()  
+#         game.board.display()
+#         game.show_turn_info()
 
 #         if undo_redo_enabled:
 #             action_taken = False  # This will track if an action (move, undo, redo) was taken
@@ -137,7 +163,7 @@ if __name__ == "__main__":
 
 
 
-#undo works, redo does not work and print not consistent, 
+#undo works, redo does not work and print not consistent,
 
 # import sys
 # from game import Game
@@ -205,7 +231,7 @@ if __name__ == "__main__":
 #                     continue
 
 #         game.play_turn()
-        
+
 
 
 #     # Option to restart the game based on user input

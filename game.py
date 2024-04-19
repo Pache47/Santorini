@@ -71,9 +71,9 @@ class Game:
     def handle_human_turn(self):
         while True:
             worker = self.get_worker_input()
-            move_direction = self.get_move_direction()
             x, y = self.worker_positions[worker]
-            new_x, new_y = self.execute_move(worker, move_direction, x, y)
+            [move_direction,new_x, new_y] = self.get_move_direction(worker,x,y)
+           
             if new_x is not None:
                 build_direction = self.get_build_direction(new_x, new_y, x, y)
                 if build_direction:
@@ -86,17 +86,20 @@ class Game:
 
     def get_worker_input(self):
         while True:
-            worker = input("Select a worker to move\n")
+            worker = input("Select a worker to move\n").upper()
             if worker in self.players[self.current_player]:
                 return worker
             print("Not a valid worker" if worker not in 'ABYZ' else "That is not your worker")
 
-    def get_move_direction(self):
+    def get_move_direction(self,worker,x,y):
         while True:
-            direction = input("Select a direction to move (n, ne, e, se, s, sw, w, nw)\n")
+            direction = input("Select a direction to move (n, ne, e, se, s, sw, w, nw)\n").lower()
             if direction in self.board.directions:
-                return direction
-            print("Not a valid direction")
+                new_x, new_y = self.execute_move(worker, direction, x, y)
+                if(new_x is not None):
+                    return [direction,new_x,new_y]
+            else:
+                print("Not a valid direction")
 
     def execute_move(self, worker, direction, x, y):
         new_x, new_y = x + self.board.directions[direction][0], y + self.board.directions[direction][1]
@@ -110,7 +113,7 @@ class Game:
 
     def get_build_direction(self, new_x, new_y, old_x, old_y):
         while True:
-            direction = input("Select a direction to build (n, ne, e, se, s, sw, w, nw)\n")
+            direction = input("Select a direction to build (n, ne, e, se, s, sw, w, nw)\n").lower()
             if direction in self.board.directions:
                 if self.board.can_build(new_x, new_y, direction, old_x, old_y):
                     self.board.build(new_x, new_y, direction, old_x, old_y)
