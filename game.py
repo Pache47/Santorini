@@ -171,25 +171,20 @@ class Game:
         return False
 
     def undo(self):
-        previous_state = self.game_manager.undo()
-        if previous_state:
-            self.__dict__.update(previous_state.__dict__)
-            self.board.display()  # Display the board after undo
-            self.show_turn_info()  # Show turn info after undo
-            return True
-        return False
+        if self.game_manager.can_undo():
+            previous_state = self.game_manager.undo()
+            if previous_state:
+                self.__dict__.update(previous_state.__dict__)
+                return True
+        return False    
 
     def redo(self):
-        next_state = self.game_manager.redo()
-        if next_state:
-            self.__dict__.update(next_state.__dict__)
-            self.board.display()  # Display the board after redo
-            self.show_turn_info()  # Show turn info after redo
-            return True
-        else:
-            self.board.display()  # Display current state if there's nothing to redo
-            self.show_turn_info()
-            return False
+        if self.game_manager.can_redo():
+            next_state = self.game_manager.redo()
+            if next_state:
+                self.__dict__.update(next_state.__dict__)
+                return True
+        return False    
 
     def show_turn_info(self):
         workers = ''.join(self.players[self.current_player])
