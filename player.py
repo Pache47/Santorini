@@ -74,14 +74,15 @@ class HeuristicAI(Player):
                             ai_score_sys = ScoringSystem(test_board,test_worker_pos)
                             height_score, center_score, distance_score =ai_score_sys.calculate_scores(self.workers, self.opponent_workers)
                             score = 3 * height_score + 2 * center_score + distance_score
-                            if height_score == 3:
-                                score += 100  # Winning priority
+                            # if height_score == 3:
+                            #     # return (worker, move_dir, build_dir)
+                            #     score += 100  # Winning priority
                             if score > best_score:
                                 best_score = score
                                 best_moves = [(worker, move_dir, build_dir)]
                             elif score == best_score:
                                 best_moves.append((worker, move_dir, build_dir))
-        # print((best_moves),score)
+        print((best_moves),score)
         return random.choice(best_moves) if best_moves else None
 
 # class HeuristicAI(Player):
