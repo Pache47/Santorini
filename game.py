@@ -134,7 +134,6 @@ class Game:
                 worker, move_direction, build_direction = move
                 x, y = self.worker_positions[worker]
                 new_x, new_y = self.execute_move(worker, move_direction, x, y)
-                print("AI move", move)
                 if new_x is not None:
                     if self.board.build(new_x, new_y, build_direction, x, y):
                         if self.score_display:

@@ -21,7 +21,7 @@ class GameManager:
         if(move):
             self.moves.append(move)
             self.current_index += 1
-        print("Saved Moves",self.moves)
+        # print("Saved Moves",self.moves)
         # print("Saved state, current moves length:", len(self.moves), "current index:", self.current_index)
 
 

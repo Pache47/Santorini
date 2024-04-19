@@ -55,14 +55,15 @@ def main():
 
     player1_type, player2_type, undo_redo_enabled, score_display = parse_arguments()
     game = Game(player1_type, player2_type, undo_redo_enabled, score_display)
-
-    if undo_redo_enabled:
-        game.game_manager.save_state(None)  # Save initial state
+    count = 1
+    # if undo_redo_enabled:
+    #     game.game_manager.save_state(None)  # Save initial state
 
     while not game.game_over:
+        count +=1
+        print("Count ,",count, "Turn :",game.turn_count)
         # Check win condition at the very start of each turn
-        if game.check_win_condition():
-            continue  # If the game has ended, skip further processing
+         # If the game has ended, skip further processing
 
 
         game.board.display()  # Display board state at the start of each full turn
@@ -131,9 +132,11 @@ def main():
         if undo_redo_enabled:
             game.game_manager.save_state((move,game.current_player))
     
-        if not game.game_over:
-            game.switch_player()
-            game.turn_count += 1
+        if game.check_win_condition():
+            break 
+        
+        game.switch_player()
+        game.turn_count += 1
 
     restart = input("Play again?\n")
     if restart.lower() == 'yes':
