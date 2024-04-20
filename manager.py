@@ -5,7 +5,15 @@ class GameManager:
     Manages the game state moves to enable undo and redo functionalities.
     """
     def __init__(self):
-        self.moves=[]
+        self.moves=[
+            # (('B','sw','n'),'blue'),
+            # (('Y','e','n'),'white'),
+            #  (('A','n','se'),'blue'),
+            # (('Y','n','sw'),'white'),
+            # (('A','n','s'),'blue'),
+            # (('Z','w','w'),'white'), 
+
+        ]
         self.current_index = -1  # Tracks the current position in moves
 
     def save_state(self,move):

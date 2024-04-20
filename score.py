@@ -51,9 +51,14 @@ class ScoringSystem:
 
     def calculate_distance_score(self, workers, opponent_workers):
         score = 0
-        for worker in workers:
-            x, y = self.worker_positions[worker]
-            distances = [abs(x - opp_x) + abs(y - opp_y) for opp_worker in opponent_workers for opp_x, opp_y in [self.worker_positions[opp_worker]]]
+        for opponent_worker in opponent_workers:
+            o_x, o_y = self.worker_positions[opponent_worker]
+            distances =[]
+            for worker in workers:
+                x, y = self.worker_positions[worker]
+                x_diff = abs(o_x-x)
+                y_diff = abs(o_y-y)
+                distances.append(x_diff+y_diff - min(x_diff,y_diff))
             score += min(distances)
         normalized_score = 8 - score  # Lower distances should increase the score
         return normalized_score
