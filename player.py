@@ -1,16 +1,20 @@
 import random
 
+from board import Board
+from score import ScoringSystem
+import copy
+
 class Player:
     """
     Base class for all player types.
     """
-    def __init__(self, board, workers, worker_positions):
-        self.board = board
+    def __init__(self, board:Board, workers, worker_positions):
+        self.board = board 
         self.workers = workers
         self.worker_positions = worker_positions
 
     def select_move(self):
-        raise NotImplementedError("Each player must implement a move selection method.")
+        pass
 
 
 class HumanPlayer(Player):
@@ -18,7 +22,6 @@ class HumanPlayer(Player):
     Human player interacts through the command line.
     """
     def select_move(self):
-        # Interaction logic would be handled in the Game class, not here
         pass
 
 
@@ -45,12 +48,17 @@ class RandomAI(Player):
 
 
 class HeuristicAI(Player):
+    """ 
+    AI that selects the best move based on a heuristic scoring system.
     """
-    Heuristic AI that evaluates moves based on a simple scoring system.
-    """
+    def __init__(self, board, workers, worker_positions, opponent_workers, scoring_system:ScoringSystem):
+        super().__init__(board, workers, worker_positions)
+        self.opponent_workers = opponent_workers
+        self.scoring_system = scoring_system
+
     def select_move(self):
         best_score = -float('inf')
-        best_move = None
+        best_moves = []
         for worker in self.workers:
             x, y = self.worker_positions[worker]
             for move_dir in self.board.directions:
@@ -59,15 +67,18 @@ class HeuristicAI(Player):
                     for build_dir in self.board.directions:
                         build_x, build_y = new_x + self.board.directions[build_dir][0], new_y + self.board.directions[build_dir][1]
                         if self.board.can_build(new_x, new_y, build_dir, x, y):
-                            score = self.evaluate_move(new_x, new_y, build_dir)
+                            test_board = Board()
+                            test_board.grid = copy.deepcopy(self.board.grid)
+                            test_worker_pos = copy.deepcopy(self.worker_positions)
+                            test_board.grid[new_x][new_y]['worker'], test_board.grid[x][y]['worker'] = test_board.grid[x][y]['worker'], None
+                            test_worker_pos[worker] = (new_x, new_y)
+                            test_board.grid[build_x][build_y]['level'] += 1 
+                            ai_score_sys = ScoringSystem(test_board,test_worker_pos)
+                            height_score, center_score, distance_score =ai_score_sys.calculate_scores(self.workers, self.opponent_workers)
+                            score = 3 * height_score + 2 * center_score + distance_score
                             if score > best_score:
                                 best_score = score
-                                best_move = (worker, move_dir, build_dir)
-        return best_move
-
-
-    def evaluate_move(self, x, y, build_dir):
-        # A simple scoring example: higher levels and central positions score higher
-        level_score = self.board.grid[x][y]['level']
-        center_score = 2 if (x == 2 and y == 2) else 1 if (1 <= x <= 3 and 1 <= y <= 3) else 0
-        return level_score + center_score
+                                best_moves = [(worker, move_dir, build_dir)]
+                            elif score == best_score:
+                                best_moves.append((worker, move_dir, build_dir))
+        return random.choice(best_moves) if best_moves else None
